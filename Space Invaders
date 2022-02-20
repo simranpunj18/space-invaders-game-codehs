@@ -1,0 +1,231 @@
+//Global setup variables 
+var background;
+var txtTitle;
+var btnStart;
+var txtInstructions;
+var logo;
+var KEYBOARD;
+//GLOBAL GAME Variables 
+var bg;
+var bgDX = 20;
+var bgDY = 0;
+var gg;
+var ggDX = 4;
+var ggDY = 0;
+var points = 0; 
+var lives = 3;
+var gameStart = false;
+var projectile = new Circle(5);
+var projectileDX = 0;
+var projectileDY = 10;
+var fired = false;
+var txtPoints;
+var txtLives;
+/* 
+1. Create a title screen:  
+
+    1a.  Title of the game 
+    1b.  Instructions or rules
+    1c.  Start/play button
+    
+    2. Create a setup function:
+    2a.  Close or remove Title screen
+    2b.  Load badguy
+    2c.  Load goodguy
+    2d.  Display points
+    2e.  Display lives
+3.  Create a gameplay function
+4.  Create a badguy movement function
+    4a.  Move to the right until they reach the edge. 
+    4b.  Then badguy move down a row
+    4c.  Then thet move left until they reach the edge.
+    4d.  Repeat until they hit the bottom or the goodguy.                    
+5.  Create goodguy movement function:
+    5a.  Create key event to move left, until reaches 0.  
+    5b.  Create key event to move right, until it reaches getWidth().
+6.  Create a projectile function:  
+    6a.  Create key event to move the projectile up.          
+7.  Create a collision function:
+    7a.  If projectile hits badguy, badguy disapears and points increases 
+    7b.  If badguy hits goodguy, goodguy disappears, lives decreases, restart screen
+    7c.  If you lose 3 lives, the gameover screen appears 
+    7d.  If the badguy hits the bottom, lives decrease, restart 
+    7e.  If you hit ALL badguys, restart with a faster speed
+    
+8.  Create a gameover function
+   8a.  Display your points 
+   8b.  Display "Play again?"
+*/
+function start(){
+    titleScreen();
+    keyDownMethod(keyDown);
+}
+
+function titleScreen(){
+    background = new Rectangle(getWidth(), getHeight());
+    background.setPosition(0,0);
+    background.setColor(Color.black);
+    add(background);
+    
+    txtTitle = new Text("SPACE INVADERS", "20pt Ariel");
+    txtTitle.setPosition(getWidth()/2-txtTitle.width/2, txtTitle.height);
+    txtTitle.setColor(Color.green);
+    add(txtTitle);
+    
+    btnStart = new Text("Press ENTER to Start", "20pt Arial");
+    btnStart.setPosition(getWidth()/2-btnStart.width/2, getHeight()/5*4);
+    btnStart.setColor(Color.green);
+    add(btnStart);
+    
+    txtInstructions = new Text("Press the SPACEBAR to fire", "10pt Ariel");
+    txtInstructions.setPosition(getWidth()/2-txtInstructions.width/2, getHeight()/2);
+    txtInstructions.setColor(Color.red);
+    add(txtInstructions);
+    
+    logo = new WebImage("https://codehs.com/uploads/1ce69f5b698a07efd911be7bdc871fca");
+    logo.setSize(150, 100);
+    logo.setPosition(getWidth()/2-logo.width/2, getHeight()/2 - (logo.height*3/2));
+    add(logo);
+}
+function keyDown(e){
+    if(e.keyCode == Keyboard.ENTER && gameStart == false){
+        setUp();
+        gameStart = true;
+        gamePlay();
+    }
+}
+
+
+function setUp(){
+    /*2. Create a setup function:
+    2a.  Close or remove Title screen
+    2b.  Load badguy
+    2c.  Load goodguy
+    2d.  Display points
+    2e.  Display lives
+    */ 
+    remove(txtTitle);
+    remove(txtInstructions);
+    remove(btnStart);
+    remove(logo);
+    
+    loadBadGuy();
+    loadGoodGuy();
+    gameScreen();
+}
+
+function loadBadGuy(){
+    bg = new WebImage("https://codehs.com/uploads/67088efde9d955a01a0c181d550cb676");
+    bg.setSize(75, 50);
+    bg.setPosition(getWidth()/2-logo.width/2,bg.height);
+    add(bg);
+    //Create and display the bad guy
+}
+function loadGoodGuy(){
+    gg = new WebImage("https://codehs.com/uploads/e0ce83fa5cdb5387ad62000baeca8655");
+    gg.setSize(50, 50);
+    gg.setPosition(getWidth()/2-gg.width/2, getHeight()-gg.height);
+    add(gg);
+    //Create and display the good guy
+}
+function gameScreen(){
+    remove(txtPoints);
+    remove(txtLives);
+    txtPoints = new Text("Points: "+points, "20pt Sans Serif");
+    txtPoints.setPosition(5, txtPoints.height);
+    txtPoints.setColor(Color.white);
+    add(txtPoints);
+    
+    txtLives = new Text("Lives: "+lives, "20pt Sans Serif");
+    txtLives.setPosition(getWidth()-txtLives.width-5, txtLives.height);
+    txtLives.setColor(Color.white);
+    add(txtLives);
+}
+
+function gamePlay(){
+    setTimer(badGuyMovement,40);
+    keyDownMethod(goodGuyMovement);
+    
+    setTimer(collision,40);
+}
+
+function badGuyMovement(){
+    //Look at 9.4.3 to bounce of walls
+    if(bg.getX() + bg.width > getWidth()){
+		bgDX = -bgDX;
+		bgDY = bg.height;
+	}
+	if(bg.getX() + bg.getHeight() > getWidth()){
+		bgDX = -bgDX;
+	}
+	if(bg.getX() - bg.getHeight() < 0){
+		bgDX = -bgDX;
+	}
+	
+	// Bounce off left wall
+	if(bg.getX() < 0){
+		bgDX = -bgDX;
+		bgDY = bg.Height;
+	}
+    
+    bg.move(bgDX,bgDY);
+    bgDY=0;
+}
+
+function goodGuyMovement(e){
+    if (e.keyCode == Keyboard.LEFT && gameStart == true) {
+        if (gg.getX() >= 0){
+            gg.move(-ggDX, ggDY);
+        }
+    }
+    if (e.keyCode == Keyboard.RIGHT && gameStart == true){
+        if(gg.getX() + gg.width <= getWidth()){
+            gg.move(ggDX, ggDY);
+        }
+    }
+        if(e.keyCode == Keyboard.letter('W') && gameStart==true && fired == false){
+            fired = true;
+            projectile = new Circle(5);
+            projectile.setPosition(gg.getX()+gg.width/2,gg.getY());
+            projectile.setColor(Color.white);
+            add(projectile);
+            setTimer(projectileMovement,4);
+        }
+}
+function projectileMovement(e){
+    projectile.move(projectileDX, -projectileDY);
+    if (projectile.getY() <=bg.getY()){
+        remove(projectile);
+        stopTimer(projectileMovement);
+        fired = false;
+    }
+}
+function collision(){
+    var leftBG = bg.getX();
+    var rightBG = bg.getX()+bg.getWidth();
+    var topBG = bg.getY();
+    var bottomBG = bg.getY()+bg.getHeight();
+    
+    var xProjectile=projectile.getX();
+    var yProjectile=projectile.getY()-projectile.getRadius();
+    
+    var leftGG = gg.getX();
+    var rightGG = gg.getX()+gg.getWidth();
+    var topGG = gg.getY();
+    var bottomGG = gg.getY()+gg.getHeight();
+    
+    if( (xProjectile>leftBG && xProjectile<rightBG) && (yProjectile<bottomBG && yProjectile>topBG) ){
+        println("hit");
+        stopTimer(collision);
+        remove(bg);
+        points+=100;
+        gameScreen();
+    }
+    if( (rightGG>leftBG && leftGG<rightBG) && (topGG<bottomBG && bottomGG>topBG) ){
+        println("hit goodguy");
+        stopTimer(collision);
+        remove(bg);
+        lives-=1;
+        gameScreen();
+    }
+}
